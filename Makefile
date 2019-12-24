@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS= -Wall -Wextra -pedantic -Wno-gnu-folding-constant
+CC=cc
+CFLAGS= -g -Wall -Wextra -pedantic -Wno-gnu-folding-constant
 DEPS = sarah2.h
 OBJ = sarah2.o
 
