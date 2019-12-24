@@ -54,6 +54,13 @@ void sarah2_encrypt(char *key, char *message, size_t message_len, char *out_buf,
 
     memcpy(out_buf, message, message_len);
 
+    // Pad by '_' if necessary.
+    size_t out_buf_size = sarah2_output_size(message_len);
+    if (message_len < out_buf_size) {
+        out_buf[out_buf_size - 1] = '_';
+        message_len = out_buf_size;
+    }
+
     size_t half_length = message_len / 2;
     char odds[half_length];
     char evens[half_length];
@@ -72,30 +79,33 @@ void sarah2_encrypt(char *key, char *message, size_t message_len, char *out_buf,
         }
 
         // Permutation. It seems like there should be a way to do this in-place in out_buf.
-        int odd_index, even_index;
-        odd_index = even_index = 0;
+        // Don't do this on the last round since it's useless (involves no key material).
+        if (round != num_rounds - 1) {
+            int odd_index, even_index;
+            odd_index = even_index = 0;
 
-        for (size_t i = 1; i <= message_len; ++i)
-        {
-            if (i % 2 == 0)
+            for (size_t i = 1; i <= message_len; ++i)
             {
-                evens[even_index++] = out_buf[i - 1];
+                if (i % 2 == 0)
+                {
+                    evens[even_index++] = out_buf[i - 1];
+                }
+                else
+                {
+                    odds[odd_index++] = out_buf[i - 1];
+                }
             }
-            else
+
+            int out_index = 0;
+            for (size_t i = 0; i < half_length; ++i)
             {
-                odds[odd_index++] = out_buf[i - 1];
+                out_buf[out_index++] = odds[i];
             }
-        }
 
-        int out_index = 0;
-        for (size_t i = 0; i < half_length; ++i)
-        {
-            out_buf[out_index++] = odds[i];
-        }
-
-        for (size_t i = 0; i < half_length; ++i)
-        {
-            out_buf[out_index++] = evens[i];
+            for (size_t i = 0; i < half_length; ++i)
+            {
+                out_buf[out_index++] = evens[i];
+            }
         }
     }
 }
@@ -117,15 +127,17 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
 
     for (int round = 0; round < num_rounds; ++round)
     {
-        // Unpermutation
-        memcpy(first_half, out_buf, half_length);
-        memcpy(second_half, &out_buf[half_length], half_length);
+        // Unpermutation. Don't do this on the first round.
+        if (round != 0) {
+            memcpy(first_half, out_buf, half_length);
+            memcpy(second_half, &out_buf[half_length], half_length);
 
-        int out_index = 0;
-        for (size_t i = 0; i < half_length; ++i)
-        {
-            out_buf[out_index++] = first_half[i];
-            out_buf[out_index++] = second_half[i];
+            int out_index = 0;
+            for (size_t i = 0; i < half_length; ++i)
+            {
+                out_buf[out_index++] = first_half[i];
+                out_buf[out_index++] = second_half[i];
+            }
         }
 
         // Unsubstitution
@@ -320,32 +332,110 @@ static int randint(int n)
     }
 }
 
+/**** Tests ****/
+
+// Test encryption and decryption of sample given at http://laser-calcium.glitch.me.
+void test_example_from_website() {
+    char key[sarah2_key_size] = 
+    "lgokksfvsjyw_soyqqwjx_bpdpbxwtkvsxjygyexskstgxejslow_g" 
+    "bsxatnrlmgjwbmzyspaknbpgt_szpbvantbulr_anqykmbwgaxdouk" 
+    "znsbqfpkwvsmoabhcfaeqalbwwxpnnkifatpranlawlqfhlufmlhsq" 
+    "cmxjjixyqzihyczmnafbzqdfb_xnwq_yeftjcoh_cshnhplkaa_vwn" 
+    "truumtj_lfwunpxfwibyyikjld_nfz_rmirvuzhakfwkqtzouyapez" 
+    "qsvrrequojmq_imnjdpntoyoixhmegbrq_khcbu_nkubtdpdfpcnqp" 
+    "hlpmckkpsoqrdtemjotwfjuralfxewevypjrrgjfngxzyuadljzdhb" 
+    "gnxwryiwklhwaukwgkazodzvogfnfim_iabljaosswkouxsghf_hjn" 
+    "hrvkd_hzpegcrhcatefkdeoftgxmmpzedwli_zbn_qopjswynz_pqx" 
+    "jmcprnlznvfodlfupxxgdqtkkzrujpanoxkrmovsshyfvqaqikfwqm" 
+    "ugjzw_hsdkwooovjhhbctugmvdidvvmmqlcrqbkmbfcyknscqwgheh" 
+    "lnmcmyrmvfmscxvmdreptsy_mvndzwrcbvv_hemloqiozkearfdhhu" 
+    "kdctfckcxkccdgwhlmdmuweu_ulsoiovz_pz_lp_prr_ft_bayqhku" 
+    "ufgzsvpipjigrpe_bgs_uteeqdwdo_xuwfiinuaisyeolxrimrneab" 
+    "atglmhssjccieqzhtiysmdserkpolc_tbdhtg_pyitmfzadnjgwxgj" 
+    "yanjtcnwgdmujkyerb_cfewlmeyrws_dxbdjrsrxavl_cvlejuwchc" 
+    "hjzrinhouhpcyykxvxmwcgeipuuorortvyrrdvzunxiuqyps_xzlxi" 
+    "ekxrjvrjhdulzcxvfdhgytsaisiyguotlyhkpayvwetqgrkygpenuv" 
+    "xhwmmzrzbqpppwozvezzcwqgfylaucomhiiqziolc_rwtxuiylvhi_" 
+    "ygsufr__ncjqa_acvbqjpvnimadisfdxebzsqnwpxqjtrdrqzjvp_k" 
+    "uecjxxxcohyh_oumeluqwaedarjlbiet_fxddaflwbvuahvwktqcvt" 
+    "si_egsermkeykggvtywrcqcudszfxeunqoagczesujimlpttllqizg" 
+    "fspthvzpltnsducdtbamuslvlwyjasbeipijbzirsdybfgbovnicgg" 
+    "ieibdcqkajdbbwkqjhuagtkakegwxopqyxyqyzobilvldznrhqnmif" 
+    "xlxsvzviochyecgqkkffmxbazxdythgeuporqejenobbbkhxaoztk_" 
+    "n_jbnhgojjlovcqvivbjizouchphtmzb_w_mddgasn_jvoxtjxudaf" 
+    "pltagbymkbmjclcetfydf_yntlpfnytvnfgionbtvgsrwzoefqgftz";
+
+    assert(sarah2_validate_key(key));
+
+    char *example = "attack_at_dawn";
+    char *expected_encrypted = "kjtofsdxmcjdg_";
+
+    size_t in_size = strlen(example);
+    size_t out_size = sarah2_output_size(in_size);
+
+    char encrypted[out_size + 1];
+    char decrypted[out_size + 1];
+    sarah2_encrypt(key, example, in_size, encrypted, Sarah2_Rounds_Maximal, 0);
+    encrypted[out_size] = '\0';
+    printf("Encrypted: %s\n", encrypted);
+    assert(strcmp(expected_encrypted, encrypted) == 0);
+
+    sarah2_decrypt(key, encrypted, out_size, decrypted, Sarah2_Rounds_Maximal, 0);
+    decrypted[out_size] = '\0';
+
+    printf("Decrypted: %s\n", decrypted);
+    assert(strcmp(example, decrypted) == 0); // Not exactly the same since an underscore was added.
+}
+
+// Test encryption and decryption of long string that's odd length.
+void test_odd_length_message() {
+    char key[sarah2_key_size];
+    sarah2_generate_key(key);
+
+    char *example = "seth_is_a_dumb_dumb_hello_thisisanothertestofareallylongmessage_and_well_iadd_some_underscores_lets_go_sledding";
+    size_t in_size = strlen(example);
+    size_t out_size = sarah2_output_size(in_size);
+
+    char encrypted[out_size + 1];
+    char decrypted[out_size + 1];
+    sarah2_encrypt(key, example, in_size, encrypted, Sarah2_Rounds_Maximal, 0);
+    encrypted[out_size] = '\0';
+    printf("Encrypted: %s\n", encrypted);
+
+    sarah2_decrypt(key, encrypted, out_size, decrypted, Sarah2_Rounds_Maximal, 0);
+    decrypted[out_size] = '\0';
+
+    printf("Decrypted: %s\n", decrypted);
+    assert(strcmp(example, decrypted) != 0); // Not exactly the same since an underscore was added.
+    assert(strncmp(example, decrypted, in_size) == 0); // But the same up to the underscore.
+    assert(decrypted[out_size - 1] == '_'); // And and underscore was added.
+}
+
+void test_output_size_calculation() {
+    assert(sarah2_output_size(5) == 6);
+    assert(sarah2_output_size(4) == 4);
+}
+
+void test_key_generation_validation() {
+    // Test key generation and validation.
+    char key[sarah2_key_size];
+    assert(!sarah2_validate_key(key)); // Random bytes on the stack shouldn't be a valid key.
+
+    sarah2_generate_key(key);
+    sarah2_print_key(key);
+    assert(sarah2_validate_key(key));
+}
+
 /**** Just for development / testing ****/
+
 int main()
 {
     srand(time(NULL));
 
-    // Tests
-    assert(sarah2_output_size(5) == 6);
-    assert(sarah2_output_size(4) == 4);
-
-    char buf[sarah2_key_size];
-    assert(!sarah2_validate_key(buf)); // Random bytes on the stack shouldn't be a valid key.
-
-    sarah2_generate_key(buf);
-    sarah2_print_key(buf);
-    assert(sarah2_validate_key(buf));
-
-    char *example = "seth_is_a_dumb_dumb_hello_";
-    int size = strlen(example);
-    char out_buf[size + 1];
-    char decrypted[size + 1];
-    sarah2_encrypt(buf, example, size, out_buf, Sarah2_Rounds_Minimal, 0);
-    out_buf[size] = '\0';
-    printf("%s\n", out_buf);
-
-    sarah2_decrypt(buf, out_buf, size, decrypted, Sarah2_Rounds_Minimal, 0);
-    decrypted[size] = '\0';
-
-    printf("%s\n", decrypted);
+    for (int i = 0; i < 1; ++i) {
+        test_output_size_calculation();
+        test_key_generation_validation();
+        test_odd_length_message();
+        test_example_from_website();
+    }
 }

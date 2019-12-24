@@ -34,7 +34,8 @@ typedef enum Sarah2_Rounds{
 size_t sarah2_output_size(size_t message_len);
 
 // Given a key of sarah2_key_size, encrypts message of message_length into out_buf (of length returned
-// returned by a call to sarah2_output_size) using rounds number of rounds. If rounds is Sarah2_Rounds_Custom,
+// returned by a call to sarah2_output_size) using rounds number of rounds. If message_len is not the same as 
+// the length of out_buf, the message is '_' padded before encryption. If rounds is Sarah2_Rounds_Custom,
 // custom num_rounds will be used. Otherwise, custom_num_rounds should be 0.
 void sarah2_encrypt(char *key, char *message, size_t message_len, char *out_buf, Sarah2_Rounds rounds, size_t custom_num_rounds);
 
