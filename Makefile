@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -Werror -Wall -Wextra -pedantic
+CFLAGS= -Wall -Wextra -pedantic
 DEPS = sarah2.h
 OBJ = sarah2.o
 

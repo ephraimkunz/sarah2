@@ -7,7 +7,7 @@
 #ifndef SARAH2_H
 #define SARAH2_H
 
-extern size_t sarah2_key_size;
+extern const size_t sarah2_key_size;
 
 typedef enum Sarah2_Rounds{
     // Supply your own number of rounds.
@@ -26,6 +26,8 @@ typedef enum Sarah2_Rounds{
 } Sarah2_Rounds;
 
 /**** Encryption and decryption ****/
+
+// IMPORTANT: Make sure to seed RNG with srand() before using this library.
 
 // Given a plaintext message length (from strlen, for instance), returns the size of the encrypted 
 // message length.
