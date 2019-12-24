@@ -62,8 +62,31 @@ void sarah2_generate_key(char *out_buf) {
     }
 }
 
+static void print_header() {
+    // Leave space for the vertical header.
+    printf("  ");
+    for (size_t i = 0; i < num_symbols; ++i) {
+        printf("%2c ", symbols[i]);
+    }
+
+    printf("\n  ");
+
+    for (size_t i = 0; i < (num_symbols * 3); ++i) {
+        printf("-");
+    }
+
+    printf("\n");
+}
+
 void sarah2_print_key(char *key) {
     for (size_t i = 0; i < num_symbols; ++i) {
+        if (i == 0) {
+            print_header();
+        }
+
+        // Print the portion of the vertical header.
+        printf("%c| ", symbols[i]);
+
         for (size_t j = 0; j < num_symbols; ++j) {
             char first = key[PAIR_FIRST_INDEX(i, j)];
             char second = key[PAIR_SECOND_INDEX(i, j)];
@@ -82,48 +105,48 @@ bool sarah2_validate_key(char *key) {
     int first_symbol_accumulator[num_symbols] = {0};
     int second_symbol_accumulator[num_symbols] = {0};
 
-    for (int i = 0; i < sarah2_key_size; i += 2) {
+    for (size_t i = 0; i < sarah2_key_size; i += 2) {
         char first = key[i];
         char *ptr = strchr(symbols, first);
         if (ptr == NULL) {
-            fprintf(stderr, "Validation failed: character %c is invalid\n", first);
+            fprintf(stderr, "Validation failed: character '%c' is invalid\n", first);
             return false;
         }
 
         int index = ptr - symbols;
-        int count = ++ (first_symbol_accumulator[index]);
+        size_t count = ++ (first_symbol_accumulator[index]);
         if (count > num_symbols) {
-            fprintf(stderr, "Validation failed: too many characters %c found in first position\n", first);
+            fprintf(stderr, "Validation failed: too many characters '%c' found in first position\n", first);
             return false;
         }
 
         char second = key[i + 1];
         ptr = strchr(symbols, second);
         if (ptr == NULL) {
-            fprintf(stderr, "Validation failed: character %c is invalid\n", first);
+            fprintf(stderr, "Validation failed: character '%c' is invalid\n", first);
             return false;
         }
 
         index = ptr - symbols;
         count = ++ (second_symbol_accumulator[index]);
         if (count > num_symbols) {
-            fprintf(stderr, "Validation failed: too many characters %c found in second position\n", first);
+            fprintf(stderr, "Validation failed: too many characters '%c' found in second position\n", first);
             return false;
         }
     } 
 
     // We need to run through each accumulator array to ensure there are num_symbols for each position. 
     // I'm not sure this is necessary with the previous checks, but we'll do it just to be safe.
-    for (int i = 0; i < num_symbols; ++i) {
+    for (size_t i = 0; i < num_symbols; ++i) {
         if (first_symbol_accumulator[i] != num_symbols) {
-            fprintf(stderr, "Validation failed: wrong number of characters %c found in first position: \n", i, first_symbol_accumulator[i]);
+            fprintf(stderr, "Validation failed: wrong number of characters '%c' found in first position: %ul\n", symbols[i], first_symbol_accumulator[i]);
             return false;
         }
     }
 
-    for (int i = 0; i < num_symbols; ++i) {
+    for (size_t i = 0; i < num_symbols; ++i) {
         if (second_symbol_accumulator[i] != num_symbols) {
-            fprintf(stderr, "Validation failed: wrong number of characters %c found in second position: \n", i, second_symbol_accumulator[i]);
+            fprintf(stderr, "Validation failed: wrong number of characters '%c' found in second position: %ul\n", symbols[i], second_symbol_accumulator[i]);
             return false;
         }
     }
