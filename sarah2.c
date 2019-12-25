@@ -39,6 +39,7 @@ static int calculate_num_rounds(size_t message_len, Sarah2_Rounds rounds, size_t
     case Sarah2_Rounds_Medium:
         return ceil(log2(message_len)) + 2;
     case Sarah2_Rounds_Maximal:
+    default:
         return ceil(log2(message_len)) * 2;
     }
 }
@@ -244,8 +245,10 @@ bool sarah2_validate_key(char *key)
     // Since I don't want to build a hashmap, we'll just check that each symbol in symbols
     // is used exactly 26 times in both the first and second position. This should be essentially
     // equivalent.
-    int first_symbol_accumulator[num_symbols] = {0};
-    int second_symbol_accumulator[num_symbols] = {0};
+    int first_symbol_accumulator[num_symbols];
+    int second_symbol_accumulator[num_symbols];
+    memset(first_symbol_accumulator, 0, num_symbols * sizeof(int));
+    memset(second_symbol_accumulator, 0, num_symbols * sizeof(int));
 
     for (size_t i = 0; i < sarah2_key_size; i += 2)
     {
