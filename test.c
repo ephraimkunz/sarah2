@@ -102,7 +102,7 @@ int main()
 {
     srand(time(NULL));
 
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         test_output_size_calculation();
         test_key_generation_validation();
         test_odd_length_message();

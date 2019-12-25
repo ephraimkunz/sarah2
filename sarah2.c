@@ -150,7 +150,8 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
             char first = out_buf[i];
             char second = out_buf[i + 1];
 
-            // Find it in the key.
+            // Find it in the key. TODO: Profiling shows this lookup is very slow, as we must go through the whole key looking for a pair.
+            // Could we create some sort of constant-time cache data structure to speedup lookups?
             for (size_t r = 0; r < NUM_SYMBOLS; ++r)
             {
                 for (size_t c = 0; c < NUM_SYMBOLS; ++c)

@@ -1,5 +1,5 @@
 CC= cc
-CFLAGS= -Wall -Werror -Wextra -pedantic -Wno-gnu-folding-constant -O3
+CFLAGS= -Wall -Werror -Wextra -pedantic -Wno-gnu-folding-constant -g3 -O3
 LDLIBS= -lm
 DEPS = sarah2.h
 OBJ = sarah2.o
