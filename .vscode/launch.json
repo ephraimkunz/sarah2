@@ -8,7 +8,7 @@
             "name": "(lldb) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/sarah2",
+            "program": "${workspaceFolder}/test",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build",

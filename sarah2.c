@@ -55,7 +55,8 @@ void sarah2_encrypt(char *key, char *message, size_t message_len, char *out_buf,
 
     // Pad by '_' if necessary.
     size_t out_buf_size = sarah2_output_size(message_len);
-    if (message_len < out_buf_size) {
+    if (message_len < out_buf_size)
+    {
         out_buf[out_buf_size - 1] = '_';
         message_len = out_buf_size;
     }
@@ -79,7 +80,8 @@ void sarah2_encrypt(char *key, char *message, size_t message_len, char *out_buf,
 
         // Permutation. It seems like there should be a way to do this in-place in out_buf.
         // Don't do this on the last round since it's useless (involves no key material).
-        if (round != num_rounds - 1) {
+        if (round != num_rounds - 1)
+        {
             int odd_index, even_index;
             odd_index = even_index = 0;
 
@@ -127,7 +129,8 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
     for (int round = 0; round < num_rounds; ++round)
     {
         // Unpermutation. Don't do this on the first round.
-        if (round != 0) {
+        if (round != 0)
+        {
             memcpy(first_half, out_buf, half_length);
             memcpy(second_half, &out_buf[half_length], half_length);
 
@@ -146,9 +149,12 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
             char second = out_buf[i + 1];
 
             // Find it in the key.
-            for (size_t r = 0; r < num_symbols; ++r) {
-                for (size_t c = 0; c < num_symbols; ++c) {
-                    if (key[PAIR_FIRST_INDEX(r, c)] == first && key[PAIR_SECOND_INDEX(r, c)] == second) {
+            for (size_t r = 0; r < num_symbols; ++r)
+            {
+                for (size_t c = 0; c < num_symbols; ++c)
+                {
+                    if (key[PAIR_FIRST_INDEX(r, c)] == first && key[PAIR_SECOND_INDEX(r, c)] == second)
+                    {
                         out_buf[i] = symbols[r];
                         out_buf[i + 1] = symbols[c];
                     }
@@ -252,6 +258,14 @@ bool sarah2_validate_key(char *key)
         }
 
         int index = ptr - symbols;
+
+        if (index < 0 || index > 26)
+        {
+            // An invalid key may have the null character, which strchr will find at the end of our string. Prevent that.
+            // fprintf(stderr, "Validation failed: character '%c' is was found at an invalid index: %d\n", first, index);
+            return false;
+        }
+
         size_t count = ++(first_symbol_accumulator[index]);
         if (count > num_symbols)
         {
@@ -268,6 +282,13 @@ bool sarah2_validate_key(char *key)
         }
 
         index = ptr - symbols;
+
+        if (index < 0 || index > 26)
+        {
+            // An invalid key may have the null character, which strchr will find at the end of our string. Prevent that.
+            // fprintf(stderr, "Validation failed: character '%c' is was found at an invalid index: %d\n", first, index);
+            return false;
+        }
         count = ++(second_symbol_accumulator[index]);
         if (count > num_symbols)
         {
