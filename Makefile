@@ -1,5 +1,6 @@
 CC= cc
 CFLAGS= -Wall -Werror -Wextra -pedantic -Wno-gnu-folding-constant -g -O1 -fsanitize=address
+LDLIBS= -lm
 DEPS = sarah2.h
 OBJ = sarah2.o
 
@@ -7,7 +8,7 @@ OBJ = sarah2.o
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 test: $(OBJ) test.o
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDLIBS)
 
 .PHONY: clean
 
