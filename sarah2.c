@@ -245,8 +245,8 @@ bool sarah2_validate_key(char *key)
     // Since I don't want to build a hashmap, we'll just check that each symbol in symbols
     // is used exactly 26 times in both the first and second position. This should be essentially
     // equivalent.
-    int first_symbol_accumulator[num_symbols];
-    int second_symbol_accumulator[num_symbols];
+    unsigned first_symbol_accumulator[num_symbols];
+    unsigned second_symbol_accumulator[num_symbols];
     memset(first_symbol_accumulator, 0, num_symbols * sizeof(int));
     memset(second_symbol_accumulator, 0, num_symbols * sizeof(int));
 
