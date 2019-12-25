@@ -6,13 +6,14 @@
 #include <string.h>
 #include <math.h>
 
+#define NUM_SYMBOLS 27 // a-z + _
+
 // Indexes into array representing S-Box (key), given the i, j position into
 // a 27 by 27 matrix holding pairs of characters at each position.
-#define PAIR_FIRST_INDEX(r, c) (((c)*2) + ((r)*num_symbols * 2))
+#define PAIR_FIRST_INDEX(r, c) (((c)*2) + ((r) * NUM_SYMBOLS * 2))
 #define PAIR_SECOND_INDEX(r, c) ((PAIR_FIRST_INDEX(r, c)) + 1)
 
-static const size_t num_symbols = 27;                         // a-z + _
-const size_t sarah2_key_size = num_symbols * num_symbols * 2; // num_symbols in 2D array, with two chars at each position.
+const size_t sarah2_key_size = NUM_SYMBOLS * NUM_SYMBOLS * 2; // NUM_SYMBOLS in 2D array, with two chars at each position.
 const char *symbols = "_abcdefghijklmnopqrstuvwxyz";
 
 static int randint(int n);
@@ -150,9 +151,9 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
             char second = out_buf[i + 1];
 
             // Find it in the key.
-            for (size_t r = 0; r < num_symbols; ++r)
+            for (size_t r = 0; r < NUM_SYMBOLS; ++r)
             {
-                for (size_t c = 0; c < num_symbols; ++c)
+                for (size_t c = 0; c < NUM_SYMBOLS; ++c)
                 {
                     if (key[PAIR_FIRST_INDEX(r, c)] == first && key[PAIR_SECOND_INDEX(r, c)] == second)
                     {
@@ -168,9 +169,9 @@ void sarah2_decrypt(char *key, char *encrypted_message, size_t message_len, char
 void sarah2_generate_key(char *out_buf)
 {
     // Fill matrix with pairs.
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
-        for (size_t j = 0; j < num_symbols; ++j)
+        for (size_t j = 0; j < NUM_SYMBOLS; ++j)
         {
             out_buf[PAIR_FIRST_INDEX(i, j)] = symbols[i];
             out_buf[PAIR_SECOND_INDEX(i, j)] = symbols[j];
@@ -178,12 +179,12 @@ void sarah2_generate_key(char *out_buf)
     }
 
     // Randomize pair positions.
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
-        for (size_t j = 0; j < num_symbols; ++j)
+        for (size_t j = 0; j < NUM_SYMBOLS; ++j)
         {
-            int swap_pos_x = randint(num_symbols);
-            int swap_pos_y = randint(num_symbols);
+            int swap_pos_x = randint(NUM_SYMBOLS);
+            int swap_pos_y = randint(NUM_SYMBOLS);
 
             // Swap the pair at the i/j'th position with the pair at the swap_pos_x/y position.
             char temp = out_buf[PAIR_FIRST_INDEX(i, j)];
@@ -201,14 +202,14 @@ static void print_header()
 {
     // Leave space for the vertical header.
     printf("  ");
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
         printf("%2c ", symbols[i]);
     }
 
     printf("\n  ");
 
-    for (size_t i = 0; i < (num_symbols * 3); ++i)
+    for (size_t i = 0; i < (NUM_SYMBOLS * 3); ++i)
     {
         printf("-");
     }
@@ -218,7 +219,7 @@ static void print_header()
 
 void sarah2_print_key(char *key)
 {
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
         if (i == 0)
         {
@@ -228,7 +229,7 @@ void sarah2_print_key(char *key)
         // Print the portion of the vertical header.
         printf("%c| ", symbols[i]);
 
-        for (size_t j = 0; j < num_symbols; ++j)
+        for (size_t j = 0; j < NUM_SYMBOLS; ++j)
         {
             char first = key[PAIR_FIRST_INDEX(i, j)];
             char second = key[PAIR_SECOND_INDEX(i, j)];
@@ -245,10 +246,10 @@ bool sarah2_validate_key(char *key)
     // Since I don't want to build a hashmap, we'll just check that each symbol in symbols
     // is used exactly 26 times in both the first and second position. This should be essentially
     // equivalent.
-    unsigned first_symbol_accumulator[num_symbols];
-    unsigned second_symbol_accumulator[num_symbols];
-    memset(first_symbol_accumulator, 0, num_symbols * sizeof(int));
-    memset(second_symbol_accumulator, 0, num_symbols * sizeof(int));
+    unsigned first_symbol_accumulator[NUM_SYMBOLS];
+    unsigned second_symbol_accumulator[NUM_SYMBOLS];
+    memset(first_symbol_accumulator, 0, NUM_SYMBOLS * sizeof(int));
+    memset(second_symbol_accumulator, 0, NUM_SYMBOLS * sizeof(int));
 
     for (size_t i = 0; i < sarah2_key_size; i += 2)
     {
@@ -270,7 +271,7 @@ bool sarah2_validate_key(char *key)
         }
 
         size_t count = ++(first_symbol_accumulator[index]);
-        if (count > num_symbols)
+        if (count > NUM_SYMBOLS)
         {
             // fprintf(stderr, "Validation failed: too many characters '%c' found in first position\n", first);
             return false;
@@ -293,27 +294,27 @@ bool sarah2_validate_key(char *key)
             return false;
         }
         count = ++(second_symbol_accumulator[index]);
-        if (count > num_symbols)
+        if (count > NUM_SYMBOLS)
         {
             // fprintf(stderr, "Validation failed: too many characters '%c' found in second position\n", first);
             return false;
         }
     }
 
-    // We need to run through each accumulator array to ensure there are num_symbols for each position.
+    // We need to run through each accumulator array to ensure there are NUM_SYMBOLS for each position.
     // I'm not sure this is necessary with the previous checks, but we'll do it just to be safe.
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
-        if (first_symbol_accumulator[i] != num_symbols)
+        if (first_symbol_accumulator[i] != NUM_SYMBOLS)
         {
             // fprintf(stderr, "Validation failed: wrong number of characters '%c' found in first position: %ul\n", symbols[i], first_symbol_accumulator[i]);
             return false;
         }
     }
 
-    for (size_t i = 0; i < num_symbols; ++i)
+    for (size_t i = 0; i < NUM_SYMBOLS; ++i)
     {
-        if (second_symbol_accumulator[i] != num_symbols)
+        if (second_symbol_accumulator[i] != NUM_SYMBOLS)
         {
             // fprintf(stderr, "Validation failed: wrong number of characters '%c' found in second position: %ul\n", symbols[i], second_symbol_accumulator[i]);
             return false;
